@@ -8,7 +8,7 @@ namespace Hanabi {
         static void Main(string[] args) {
 
             PrintData();
-            DealCheatBricks();
+            DealBricks();
             PrintData();
 
             while (true) {
@@ -18,7 +18,8 @@ namespace Hanabi {
                 Player currentPlayer = players[currentPlayerIndex];
 
                 string oldHand = currentPlayer.ToString();
-                Strategies.MakeATurn(currentPlayer);
+                Strategies.MakeATurn2(currentPlayer);
+                VerifyThatThePlayerMadeAMove();
 
                 string newHand = currentPlayer.ToString();
 
@@ -36,12 +37,16 @@ namespace Hanabi {
             PrintData();
         }
 
+        private static void VerifyThatThePlayerMadeAMove() {
+            if (turn != moves) throw new Exception("The player did not make a move");
+        }
+
         static void GoToNextPlayer() {
             currentPlayerIndex = (currentPlayerIndex + 1) % players.Count();
             turn += 1;
         }
 
-        static bool IsBrickPlayable(Brick brick) {
+        public static bool IsBrickPlayable(Brick brick) {
             if (table.Contains(brick)) return false;
             if (brick.number == 1) return true;
             return table.Contains(new Brick(brick.color, brick.number-1));
@@ -59,6 +64,7 @@ namespace Hanabi {
             AddClue();
 
             DrawABrick(player);
+            moves += 1;
         }
         public static void PlayABrick(Player player, int brickIndex = 0) {
             Brick playedBrick = player.RemoveBrick(brickIndex);
@@ -73,6 +79,7 @@ namespace Hanabi {
             }
 
             DrawABrick(player);
+            moves += 1;
         }
 
         static void DrawABrick(Player player) {
@@ -82,9 +89,17 @@ namespace Hanabi {
             }
         }
 
-        static bool UseAClue() {
+        public static bool GiveAClue(Player player, int clue) {
             if (clues == 0) return false;
             clues -= 1;
+
+            foreach (Brick brick in player.hand) {
+                if ((int)brick.color == clue || brick.number == clue) {
+                    brick.clue += clue;
+                }
+            }
+
+            moves += 1;
             return true;
         }
 
