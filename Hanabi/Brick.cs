@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using static Hanabi.GlobalVariables;
 
 namespace Hanabi {
 
@@ -16,16 +17,39 @@ namespace Hanabi {
          *  - 25 means that the color yellow and the number is 5 
          */
 
-        public enum Color { white=10, yellow=20, red=30, blue=40, green=50 };
+        public enum Color { white=10, yellow=20, red=30, blue=40, green=50, unknown=0 };
+        public static Color[] allColors = new Color[] { Color.white, Color.yellow, Color.red, Color.green, Color.blue };
         public static int[] Numbers = new int[] { 1, 1, 1, 2, 2, 3, 3, 4, 4, 5 };
 
-        public Color color;
-        public int number;
+        private readonly Color color;
+        private readonly int number;
 
-        public int clue = 0;
-        
+        private void VerifyPlayer() {
+            if (currentPlayerIndex == playerIndex) {
+                lifes = 0;
+                Console.WriteLine($"Player {currentPlayerIndex} peaked at her/his brick!");
+            }
+
+        }
+
+        public Color PeakColor() {
+            if (gotColorClue) return color;
+            VerifyPlayer();
+            return color;
+        }
+
+        public int PeakNumber() {
+            if (gotNumberClue) return number;
+            VerifyPlayer();
+            return number;
+        }
+
+        public bool gotNumberClue = false;
+        public bool gotColorClue = false;
+        public int playerIndex = -1;
+
         public bool GotEnoughClues() {
-            if (clue > 9 && clue % 10 > 0) return true;
+            if (gotNumberClue && gotColorClue) return true;
             return false;
         }
 
@@ -35,7 +59,7 @@ namespace Hanabi {
         }
 
         public override string ToString() {
-            return $"[{color} {number}]";
+            return $"|{color}{number}|";
         }
 
         public override bool Equals(object obj) {
@@ -52,9 +76,23 @@ namespace Hanabi {
             return (int)color + number;
         }
 
-        public static string BricksAsString(IEnumerable<Brick> bricks) {
-            return string.Join(", ", bricks);
+        public bool IsBrickPlayable() {
+            if (!GotEnoughClues()) {
+                VerifyPlayer();
+            }
+            if (table.Contains(this)) return false;
+            if (number == 1) return true;
+            return table.Contains(new Brick(color, number - 1));
+        }
+
+        public decimal CountPlayability() {
+            if (currentPlayerIndex == playerIndex) {
+                // Current player is looking
+                return 0;
+            } else {
+                // Another player is looking
+                return 0;
+            }
         }
     }
-
 }

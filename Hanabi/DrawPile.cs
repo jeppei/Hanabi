@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using static Hanabi.Brick;
 
 namespace Hanabi {
@@ -10,7 +11,7 @@ namespace Hanabi {
 
         public DrawPile() {
             
-            foreach (Color color in Enum.GetValues(typeof(Color))) {
+            foreach (Color color in allColors) {
                 foreach (int i in Numbers) {
                     Bricks.Add(new Brick(color, i));
                 }
