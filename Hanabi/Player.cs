@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using static Hanabi.Brick;
 using static Hanabi.GlobalVariables;
@@ -17,14 +18,14 @@ namespace Hanabi {
         }
 
         public void ReceiveBrick(Brick receivedBrick, int brickIndex = -1) {
-            receivedBrick.playerIndex = playerIndex;
+            receivedBrick.brickLocation = (BrickLocation)playerIndex;
             brickIndex = (brickIndex == -1) ? hand.Count : brickIndex;
             hand.Insert(brickIndex, receivedBrick);
         }
 
-        private Brick RemoveBrick(int i) {
+        private Brick RemoveBrick(int i, BrickLocation brickLocation) {
             Brick brickToRemove = hand[i];
-            brickToRemove.playerIndex = -1;
+            brickToRemove.brickLocation = brickLocation;
             hand.RemoveAt(i);
             return brickToRemove;
         }
@@ -71,7 +72,7 @@ namespace Hanabi {
         public bool TrashABrick(int brickIndex = 0) {
             if (moves == turn) return false;
             
-            Brick trashedBrick = RemoveBrick(brickIndex);
+            Brick trashedBrick = RemoveBrick(brickIndex, BrickLocation.TrashPile);
             trashPile.Add(trashedBrick);
             AddClue();
 
@@ -84,16 +85,19 @@ namespace Hanabi {
         public bool PlayABrick(int brickIndex = 0) {
             if (moves == turn) return false;
 
-            Brick playedBrick = RemoveBrick(brickIndex);
+            Brick playedBrick = RemoveBrick(brickIndex, BrickLocation.Unknown);
 
             if (playedBrick.IsBrickPlayable()) {
                 score += 1;
                 if (playedBrick.PeakNumber() == 5) AddClue();
+                playedBrick.brickLocation = BrickLocation.Table;
                 table.Add(playedBrick);
             } else {
                 lifes -= 1;
+                playedBrick.brickLocation = BrickLocation.TrashPile;
                 trashPile.Add(playedBrick);
             }
+
             DrawABrick();
             moves += 1;
             lastMoveDetails = $"Played {playedBrick}";
@@ -133,6 +137,47 @@ namespace Hanabi {
             moves += 1;
             lastMoveDetails = $"Clue {clueAsString} to {player.playerIndex}";
             return true;
+        }
+
+        public List<Brick> GetVisibleBricks() {
+            List<Brick> visibleBricks = new List<Brick>();
+
+            foreach (Player player in players) {
+                if (player.playerIndex == currentPlayerIndex) continue;
+
+                visibleBricks.AddRange(player.hand);
+            }
+
+            visibleBricks.AddRange(trashPile);
+            visibleBricks.AddRange(table);
+
+            return visibleBricks;
+        }
+
+        public List<Brick> GetUnvisibleBricks() {
+            List<Brick> unvisible = Brick.GenerateCompleteSetOfBricks();
+            foreach (Brick brick in GetVisibleBricks()) unvisible.Remove(brick);
+            return unvisible;
+        }
+
+        public float CalculateBrickPlayability(Brick brick) {
+            if (brick.brickLocation != (BrickLocation)this.playerIndex) {
+                throw new NotImplementedException("This is not implemented");
+            }
+
+            List<Brick> possibleBricks = this.GetUnvisibleBricks();
+            if (brick.gotColorClue) {
+                possibleBricks = possibleBricks.Where(b => b.PeakColor() == brick.PeakColor()).ToList();
+            }
+            if (brick.gotNumberClue) {
+                possibleBricks = possibleBricks.Where(b => b.PeakNumber() == brick.PeakNumber()).ToList();
+            }
+
+            float playAble = 0;
+            foreach (Brick possibleBrick in possibleBricks) {
+                if (possibleBrick.IsBrickPlayable()) playAble++;
+            }
+            return playAble / possibleBricks.Count();
         }
     }
 }

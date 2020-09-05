@@ -23,7 +23,8 @@ namespace Hanabi {
             // Check if I can play a brick, if so play it
             for (int i = 0; i < currentPlayer.hand.Count; i++) {
                 Brick brick = currentPlayer.hand[i];
-                if (brick.GotEnoughClues() && brick.IsBrickPlayable()) {
+                if (currentPlayer.CalculateBrickPlayability(brick) == 1) {
+                //if (brick.GotEnoughClues() && brick.IsBrickPlayable()) {
                     currentPlayer.PlayABrick(i);
                     return;
                 }
@@ -35,13 +36,13 @@ namespace Hanabi {
                     if (allPlayableBricks[playerindex].Count > 0) {
 
                         Brick brick = allPlayableBricks[playerindex].First();
-                        if (!brick.gotColorClue) {
-                            currentPlayer.GiveAColorClueTo(players[playerindex], brick.PeakColor());
-                            return;
-                        } else if (!brick.gotNumberClue) {
+                        if (!brick.gotNumberClue) {
                             currentPlayer.GiveANumberClueTo(players[playerindex], brick.PeakNumber());
                             return;
-                        }
+                        } else if (!brick.gotColorClue) {
+                            currentPlayer.GiveAColorClueTo(players[playerindex], brick.PeakColor());
+                            return;
+                        } 
                     }
                 }
             }

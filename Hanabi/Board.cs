@@ -7,6 +7,9 @@ using static Hanabi.GlobalVariables;
 namespace Hanabi {
 
     class Board {
+        
+        static readonly int[] results = new int[26];
+        
         static void Main() {
 
 
@@ -44,8 +47,27 @@ namespace Hanabi {
                 Print("THE GAME IS OVER");
                 score = (lifes == 0) ? 0 : score;
 
+                results[score]++;
                 PrintData();
                 SaveResult();
+            }
+            PrintStatistics();
+        }
+
+        private static void PrintStatistics() {
+            Console.WriteLine($"#### STATISTICS ####");
+
+            for (int i = 0; i < results.Count(); i++) {
+
+                if (results[i] == 0) continue;
+                Console.Write($"{i}: ");
+
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                for (var j = 0; j < results[i]; j++) Console.Write("#");
+                
+                Console.ResetColor();
+                Console.WriteLine($" {results[i]}");
             }
         }
 
@@ -140,7 +162,7 @@ namespace Hanabi {
 
         static void PrintPlayersHands() {
             for (int i = 0; i < players.Count(); i++) {
-                Print($"  Player[{i + 1}]:{players[i]}");
+                Print($"  Player[{i}]:{players[i]}");
             }
         }
 

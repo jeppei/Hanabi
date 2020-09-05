@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using static Hanabi.GlobalVariables;
 
 namespace Hanabi {
@@ -25,11 +26,13 @@ namespace Hanabi {
         private readonly int number;
 
         private void VerifyPlayer() {
-            if (currentPlayerIndex == playerIndex) {
+            if ((int)brickLocation == currentPlayerIndex) {
                 lifes = 0;
                 Console.WriteLine($"Player {currentPlayerIndex} peaked at her/his brick!");
+            } else if (brickLocation == BrickLocation.DrawPile) {
+                lifes = 0;
+                Console.WriteLine($"Player {currentPlayerIndex} peaked at a brick in the draw pile!");
             }
-
         }
 
         public Color PeakColor() {
@@ -46,12 +49,30 @@ namespace Hanabi {
 
         public bool gotNumberClue = false;
         public bool gotColorClue = false;
-        public int playerIndex = -1;
 
-        public bool GotEnoughClues() {
-            if (gotNumberClue && gotColorClue) return true;
-            return false;
+        /*
+         * The player index indicates the location of the brick which 
+         * could be 
+         *  - the index of a player (0, 1, 2, 3, 4)
+         *  - the draw pile (-1)  
+         *  - the trash pile (-2)
+         *  - the table (-3)
+         */
+        public enum BrickLocation {
+            Unknown = -4,
+            Table = -3,
+            TrashPile = -2,
+            DrawPile = -1,
+            Player0 = 0,
+            Player1 = 1,
+            Player2 = 2,
+            Player3 = 3,
+            Player4 = 4
         }
+
+        public BrickLocation brickLocation = BrickLocation.Unknown;
+
+        public bool GotEnoughClues() => gotNumberClue && gotColorClue;
 
         public Brick(Color color, int number) {
             this.color = color;
@@ -77,22 +98,22 @@ namespace Hanabi {
         }
 
         public bool IsBrickPlayable() {
-            if (!GotEnoughClues()) {
-                VerifyPlayer();
-            }
+
+            if (!GotEnoughClues()) VerifyPlayer();
+
             if (table.Contains(this)) return false;
             if (number == 1) return true;
             return table.Contains(new Brick(color, number - 1));
         }
 
-        public decimal CountPlayability() {
-            if (currentPlayerIndex == playerIndex) {
-                // Current player is looking
-                return 0;
-            } else {
-                // Another player is looking
-                return 0;
+        internal static List<Brick> GenerateCompleteSetOfBricks() {
+            List<Brick> bricks = new List<Brick>();
+            foreach (Color color in allColors) {
+                foreach (int i in Numbers) {
+                    bricks.Add(new Brick(color, i));
+                }
             }
+            return bricks;
         }
     }
 }

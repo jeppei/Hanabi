@@ -34,7 +34,7 @@ namespace Hanabi {
         
         public static bool cheat = false;
         public static bool printInConsole = false;
-        public static int iterations = 1000;
+        public static int iterations = 200;
 
         public static int score;
         public static int lifes;
