@@ -22,6 +22,8 @@ namespace Hanabi {
         public enum Color { white=10, yellow=20, red=30, blue=40, green=50, unknown=0 };
         public static Color[] allColors = new Color[] { Color.white, Color.yellow, Color.red, Color.green, Color.blue };
         public static int[] Numbers = new int[] { 1, 1, 1, 2, 2, 3, 3, 4, 4, 5 };
+        public static bool IsNumberClue(int clue) => 0 < clue && clue < 6;
+        public static bool IsColorClue(int clue) => 9 < clue && clue < 51;
 
         private readonly Color color;
         private readonly int number;
@@ -29,13 +31,25 @@ namespace Hanabi {
         public float brickPlayability = 0;  // this value is calculated in the player class
         public float brickTrashability = 0; // this value is calculated in the player class
 
+        public bool gotNumberClue = false;
+        public bool gotColorClue = false;
+
+        // I you get a clue and the player only points at this brick then this value becomes true
+        public bool onlyOneWithClue = false; 
+
+        /* When giving a clue that two bricks are green, then you also know that the other bricks 
+         * can't be green, which will be called an anticlue. Same thing goes for the number
+         */
+        public List<int> antiNumberClues = new List<int>(); // Numbers that this brick cannot have
+        public List<Color> antiColorClues = new List<Color>(); // Numbers that this brick cannot have
+
         private void VerifyPlayer() {
             if ((int)brickLocation == currentPlayerIndex) {
-                lifes = 0;
                 Console.WriteLine($"Player {currentPlayerIndex} peaked at her/his brick!");
+                throw new Exception($"Player {currentPlayerIndex} peaked at her/his brick!");
             } else if (brickLocation == BrickLocation.DrawPile) {
-                lifes = 0;
                 Console.WriteLine($"Player {currentPlayerIndex} peaked at a brick in the draw pile!");
+                throw new Exception($"Player {currentPlayerIndex} peaked at a brick in the draw pile!");
             }
         }
 
@@ -50,9 +64,6 @@ namespace Hanabi {
             VerifyPlayer();
             return number;
         }
-
-        public bool gotNumberClue = false;
-        public bool gotColorClue = false;
 
         /*
          * The player index indicates the location of the brick which 
@@ -126,7 +137,7 @@ namespace Hanabi {
             return table.Contains(new Brick(color, number - 1));
         }
 
-        public bool IsBrickTrashAble() {
+        public bool IsBrickTrashable() {
 
             if (!GotEnoughClues()) VerifyPlayer();
                         

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using static Hanabi.Brick;
 using static Hanabi.GlobalVariables;
 
@@ -9,13 +10,15 @@ namespace Hanabi {
     class Board {
         
         static readonly int[] results = new int[26];
+        static StringBuilder history;
         
         static void Main() {
-
-            Console.Write("[1       50       100]\n ");
+ 
+            Console.Write("[1                      50                      100]\n ");
             for (int i = 0; i < iterations; i++) {
-                
-                if (i % (iterations/20) == 0) {
+
+                history = new StringBuilder();
+                if (i % (iterations/50) == 0) {
                     PrintProgress();
                 }
 
@@ -36,12 +39,12 @@ namespace Hanabi {
                     string oldHand = currentPlayer.ToStringWithClues();
                     foreach (Brick brick in currentPlayer.hand) {
                         currentPlayer.CalculateBrickPlayability(brick);
-                        currentPlayer.CalculateTrashability(brick);
+                        currentPlayer.CalculateBrickTrashability(brick);
                     }
                     string playabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickPlayability.ToString().Replace(",", ".").WithMaxLenght(4)));
                     string trashabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickTrashability.ToString().Replace(",", ".").WithMaxLenght(4)));
 
-                    Strategies.PlayIfTheOddsAreHigh(currentPlayer);
+                    Strategies.PlayIfTheOddsAreHigh2(currentPlayer);
                     VerifyThatThePlayerMadeAMove();
 
                     Print($"Turn {turn}, " +
@@ -66,6 +69,10 @@ namespace Hanabi {
 
                 results[score]++;
                 PrintData();
+                //if (score == 24) {
+                //    ForcePrint();
+                //    return;
+                //}
                 SaveResult();
             }
             PrintStatistics();
@@ -123,7 +130,10 @@ namespace Hanabi {
         }
 
         private static void Print(string text, bool includeLinebreak = true) {
-            if (!printInConsole) return;
+            if (!printInConsole) {
+                history.Append(text + "\n");
+                return;
+            }
             if (string.IsNullOrEmpty(text)) {
                 Console.WriteLine("");
                 return;
@@ -151,7 +161,6 @@ namespace Hanabi {
         }
 
         private static void PrintWithColor(string text, ConsoleColor consoleColor) {
-            string letterToRemove = ConsoleColor.Blue.ToString()[0].ToString().ToLower();
             Console.ForegroundColor = consoleColor;
             Console.Write($"{text.Substring(1)}");
             Console.ResetColor();
@@ -159,11 +168,11 @@ namespace Hanabi {
 
         private static void VerifyThatThePlayerMadeAMove() {
             if (turn > moves) {
-                lifes = 0;
                 Console.WriteLine("The player did not make a move!");
+                throw new Exception("The player did not make a move!");
             } else if (turn < moves) {
-                lifes = 0;
                 Console.WriteLine("The player managed to make more than 1 move!");
+                throw new Exception("The player managed to make more than 1 move!");
             }
         }
 
@@ -172,10 +181,24 @@ namespace Hanabi {
             turn++;
         }
 
+        static void ForcePrint() {
+            bool temp = printInConsole;
+            printInConsole = true;
+            Print(history.ToString());
+            printInConsole = temp;
+        }
+
         static bool IsTheGameOver() {
             if (lastTurns == players.Count()) return true;
             if (drawPile.Count == 0) lastTurns += 1;
-            if (lifes == 0) return true;
+            if (lifes == 0) {
+                /* This code can be used to examine why the number 
+                 * of lifes is 0 (which leads to a score which is 0)
+                ForcePrint(history.ToString());
+                */
+                return true;
+
+            }
             return false;
         }
 

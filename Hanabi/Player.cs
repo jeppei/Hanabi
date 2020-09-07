@@ -109,6 +109,9 @@ namespace Hanabi {
         }
 
         public bool GiveANumberClueTo(Player player, int number) {
+            if (currentPlayerIndex == player.playerIndex) {
+                throw new Exception("You are not allowed to give a clue to yourself!");
+            }
             if (number < 1 || 5 < number) return false;
             return GiveAClueTo(player, number);
         }
@@ -120,18 +123,39 @@ namespace Hanabi {
 
             int cluedBricks = 0;
             string clueAsString = "invalid clue";
+
+            Brick brickWhoGotTheLastClue = null;
             foreach (Brick brick in player.hand) {
-                if ((int)brick.PeakColor() == clue) {
-                    brick.gotColorClue = true;
-                    cluedBricks++;
-                    clueAsString = ((Brick.Color)clue).ColorToString();
-                } else if (brick.PeakNumber() == clue) {
-                    brick.gotNumberClue = true;
-                    cluedBricks++;
-                    clueAsString = clue.ToString();
+                if (IsColorClue(clue)) { 
+
+                    if ((int)brick.PeakColor() == clue) {
+                        brick.gotColorClue = true;
+                        cluedBricks++;
+                        clueAsString = ((Color)clue).ColorToString();
+                        brickWhoGotTheLastClue = brick;
+                    } else {
+                        // Give anti clue
+                        brick.antiColorClues.Add((Color)clue);
+                    }
+                
+                } else if (IsNumberClue(clue)) {
+                    if (brick.PeakNumber() == clue) {
+                        brick.gotNumberClue = true;
+                        cluedBricks++;
+                        clueAsString = clue.ToString();
+                        brickWhoGotTheLastClue = brick;
+                    } else {
+                        // Give anti clue
+                        brick.antiNumberClues.Add(clue);
+                    }
                 }
             }
-            if (cluedBricks == 0) return false;
+
+            if (cluedBricks == 0) {
+                throw new Exception($"The user gaved an invalid clue! Clue = {clue}");
+            } else if (cluedBricks == 1) {
+                brickWhoGotTheLastClue.onlyOneWithClue = true;
+            }
 
             clues -= 1;
             moves += 1;
@@ -160,7 +184,11 @@ namespace Hanabi {
             return unvisible;
         }
 
-        public float CalculateBrickPlayability(Brick brick) {
+        public float CalculateBrickPlayability(Brick brick) => CalculateAbility(brick, Ability.play);
+        public float CalculateBrickTrashability(Brick brick) => CalculateAbility(brick, Ability.trash);
+
+        private enum Ability { trash, play }
+        private float CalculateAbility(Brick brick, Ability ability) {
             if (brick.brickLocation != (BrickLocation)this.playerIndex) {
                 throw new NotImplementedException("This is not implemented");
             }
@@ -173,35 +201,36 @@ namespace Hanabi {
                 possibleBricks = possibleBricks.Where(b => b.PeakNumber() == brick.PeakNumber()).ToList();
             }
 
-            float playableBricks = 0;
+            foreach (Color antiClue in brick.antiColorClues) {
+                possibleBricks = possibleBricks.Where(b => b.PeakColor() != antiClue).ToList();
+            }
+
+            foreach (int antiClue in brick.antiColorClues) {
+                possibleBricks = possibleBricks.Where(b => b.PeakNumber() != antiClue).ToList();
+            }
+
+            float bricksWithAbility = 0;
             foreach (Brick possibleBrick in possibleBricks) {
-                if (possibleBrick.IsBrickPlayable()) playableBricks++;
+                if (ability == Ability.trash) {
+                    if (possibleBrick.IsBrickTrashable()) bricksWithAbility++;
+                } else if (ability == Ability.play) {
+                    if (possibleBrick.IsBrickPlayable()) bricksWithAbility++;
+                } else {
+                    throw new Exception("Not implemented");
+                }
             }
 
-            brick.brickPlayability = playableBricks / possibleBricks.Count();
-            return brick.brickPlayability;
-        }
+            if (ability == Ability.trash) {
+                brick.brickTrashability = bricksWithAbility / possibleBricks.Count();
+                return brick.brickTrashability;
 
-        public float CalculateTrashability(Brick brick) {
-            if (brick.brickLocation != (BrickLocation)this.playerIndex) {
-                throw new NotImplementedException("This is not implemented");
-            }
+            } else if (ability == Ability.play) {
+                brick.brickPlayability = bricksWithAbility / possibleBricks.Count();
+                return brick.brickPlayability;
 
-            List<Brick> possibleBricks = this.GetUnvisibleBricks();
-            if (brick.gotColorClue) {
-                possibleBricks = possibleBricks.Where(b => b.PeakColor() == brick.PeakColor()).ToList();
+            } else {
+                throw new Exception("Not implemented");
             }
-            if (brick.gotNumberClue) {
-                possibleBricks = possibleBricks.Where(b => b.PeakNumber() == brick.PeakNumber()).ToList();
-            }
-
-            float trashableBricks = 0;
-            foreach (Brick possibleBrick in possibleBricks) {
-                if (possibleBrick.IsBrickTrashAble()) trashableBricks++;
-            }
-
-            brick.brickTrashability = trashableBricks / possibleBricks.Count();
-            return brick.brickTrashability;
         }
     }
 }
