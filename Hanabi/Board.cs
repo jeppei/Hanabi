@@ -12,9 +12,16 @@ namespace Hanabi {
         
         static void Main() {
 
-
+            Console.Write("[1       50       100]\n ");
             for (int i = 0; i < iterations; i++) {
                 
+                if (i % (iterations/20) == 0) {
+                    PrintProgress();
+                }
+
+                printInConsole = (i == iterations - 1);
+                if (printInConsole) Print("");
+
                 ResetValues();
                 PrintData();
                 DealBricks();
@@ -26,20 +33,30 @@ namespace Hanabi {
 
                     Player currentPlayer = players[currentPlayerIndex];
 
-                    string oldHand = currentPlayer.ToString();
-                    Strategies.PlayOnlyIf100Sure(currentPlayer);
+                    string oldHand = currentPlayer.ToStringWithClues();
+                    foreach (Brick brick in currentPlayer.hand) {
+                        currentPlayer.CalculateBrickPlayability(brick);
+                        currentPlayer.CalculateTrashability(brick);
+                    }
+                    string playabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickPlayability.ToString().Replace(",", ".").WithMaxLenght(4)));
+                    string trashabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickTrashability.ToString().Replace(",", ".").WithMaxLenght(4)));
+
+                    Strategies.PlayIfTheOddsAreHigh(currentPlayer);
                     VerifyThatThePlayerMadeAMove();
 
-                    string newHand = currentPlayer.ToString();
-
                     Print($"Turn {turn}, " +
-                          $"Player {currentPlayerIndex}: {oldHand} --> {newHand}" +
-                          $"\n\tMove: {lastMoveDetails}, " +
+                          $"\nPlayer {currentPlayerIndex}: {oldHand}" +
+                          $"\nPlayability:  {playabilities}" +
+                          $"\nTrashability: {trashabilities}" +
+                          $"\nMove: {lastMoveDetails}, " +
                           $"Score={score}, " +
                           $"Lifes={lifes}, " +
+                          $"Clues={clues}, " +
                           $"PileSize={drawPile.Count}, ");
                     PrintPlayersHands();
+                    Print($"Trash ({trashPile.Count}): {trashPile.BricksToString()}");
                     PrintTableBricks();
+                    Print("");
 
                     GoToNextPlayer();
                 }
@@ -57,6 +74,10 @@ namespace Hanabi {
         private static void PrintStatistics() {
             Console.WriteLine($"#### STATISTICS ####");
 
+            int div = (iterations <= 200) ? 1 : iterations / 100;
+
+            int total = 0;
+
             for (int i = 0; i < results.Count(); i++) {
 
                 if (results[i] == 0) continue;
@@ -64,11 +85,15 @@ namespace Hanabi {
 
                 Console.BackgroundColor = ConsoleColor.DarkBlue;
                 Console.ForegroundColor = ConsoleColor.DarkBlue;
-                for (var j = 0; j < results[i]; j++) Console.Write("#");
+
+                for (var j = 0; j < results[i]/div; j++) Console.Write("#");
                 
                 Console.ResetColor();
-                Console.WriteLine($" {results[i]}");
+                Console.WriteLine($" {results[i]}");// ({((100 * results[i]) / (float)iterations).ToString().WithMaxLenght(4)}%)");
+                //Console.WriteLine($" {results[i]} ({((100 * results[i]) / (float)iterations).ToString().WithMaxLenght(4)}%)");
+                total += i * results[i];
             }
+            Console.WriteLine($"Mean value: {total/(float)iterations}");
         }
 
         private static void SaveResult() {
@@ -90,35 +115,46 @@ namespace Hanabi {
             Print("Results can be found in " + fileName);
         }
 
-        private static void Print(string text) {
+        private static void PrintProgress() {
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.ForegroundColor = ConsoleColor.DarkBlue;
+            Console.Write("#");
+            Console.ResetColor();
+        }
+
+        private static void Print(string text, bool includeLinebreak = true) {
             if (!printInConsole) return;
+            if (string.IsNullOrEmpty(text)) {
+                Console.WriteLine("");
+                return;
+            }
+
             string[] texts = text.Split("|");
             foreach (string t in texts) {
-                if (t.StartsWith("white")) {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write($"{t.Substring(5)}");
-                    Console.ResetColor();
-                } else if (t.StartsWith("yellow")) {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Write($"{t.Substring(6)}");
-                    Console.ResetColor();
-                } else if (t.StartsWith("red")) {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write($"{t.Substring(3)}");
-                    Console.ResetColor();
-                } else if (t.StartsWith("green")) {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write($"{t.Substring(5)}");
-                    Console.ResetColor();
-                } else if (t.StartsWith("blue")) {
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.Write($"{t.Substring(4)}");
-                    Console.ResetColor();
+                if (t.Length == 0) {
+                    // Do nothing
+                } else if (t[0] == 'w') {
+                    PrintWithColor(t, ConsoleColor.White);
+                } else if (t[0] == 'y') {
+                    PrintWithColor(t, ConsoleColor.Yellow);
+                } else if (t[0] == 'r') {
+                    PrintWithColor(t, ConsoleColor.Red);
+                } else if (t[0] == 'g') {
+                    PrintWithColor(t, ConsoleColor.Green);
+                } else if (t[0] == 'b') {
+                    PrintWithColor(t, ConsoleColor.Blue);
                 } else {
                     Console.Write(t);
                 }
             }
-            Console.WriteLine("");
+            if (includeLinebreak) Console.WriteLine("");
+        }
+
+        private static void PrintWithColor(string text, ConsoleColor consoleColor) {
+            string letterToRemove = ConsoleColor.Blue.ToString()[0].ToString().ToLower();
+            Console.ForegroundColor = consoleColor;
+            Console.Write($"{text.Substring(1)}");
+            Console.ResetColor();
         }
 
         private static void VerifyThatThePlayerMadeAMove() {
@@ -149,20 +185,18 @@ namespace Hanabi {
             Print($"Score: {score}");
             Print($"Lifes: {lifes}");
             Print($"Clues: {clues}");
-            Print($"Pile size: {drawPile.Count}");
-            Print($"Trash size: {trashPile.Count}");
-            Print($"Number of players: {players.Length}");
-            Print($"Hand size: {handSize}");
-            Print($"Players:");
+            Print($"Players ({players.Length}):");
             PrintPlayersHands();
-            Print($"Played tiles: {table.BricksToString()}");
+            Print($"Draw pile ({drawPile.Count})");
+            Print($"Table     ({table.Count}): {table.BricksToString()}");
+            Print($"Trash     ({trashPile.Count}): {trashPile.BricksToString()}");
             Print($"");
             PrintTableBricks();
         }
 
         static void PrintPlayersHands() {
             for (int i = 0; i < players.Count(); i++) {
-                Print($"  Player[{i}]:{players[i]}");
+                Print($"  Player[{i}]: {players[i]}");
             }
         }
 
@@ -186,11 +220,23 @@ namespace Hanabi {
                 }
             }
 
-            Print(whites + "]");
-            Print(yellows + "]");
-            Print(reds + "]");
-            Print(greens + "]");
-            Print(blues + "]");
+            int w = 5 - (whites.Count()  - 2)/4;
+            int y = 5 - (yellows.Count() - 2)/4;
+            int r = 5 - (reds.Count()    - 2)/4;
+            int g = 5 - (greens.Count()  - 2)/4;
+            int b = 5 - (blues.Count()   - 2)/4;
+
+            string ww = new string(' ', w);
+            string yy = new string(' ', y);
+            string rr = new string(' ', r);
+            string gg = new string(' ', g);
+            string bb = new string(' ', b);
+
+            Print(whites  + ww + " ]");
+            Print(yellows + yy + " ]");
+            Print(reds    + rr + " ]");
+            Print(greens  + gg + " ]");
+            Print(blues   + bb + " ]");
         }
 
         static void DealBricks() {

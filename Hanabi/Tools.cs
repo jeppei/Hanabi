@@ -38,5 +38,11 @@ namespace Hanabi {
                 throw new Exception("Invalid color");
             }
         }
+
+        public static string WithMaxLenght(this string text, int maxLength) {
+            if (text == null) return text;
+            if (text.Length < maxLength) return text;
+            return text.Substring(0, maxLength);
+        }
     }
 }

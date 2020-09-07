@@ -12,6 +12,7 @@ namespace Hanabi {
 
         public int playerIndex;
         public override string ToString() => string.Join(", ", hand);
+        public string ToStringWithClues() => string.Join(", ", hand.Select(b => b.ToStringWithClues()));
 
         public Player(int playerIndex) {
             this.playerIndex = playerIndex;
@@ -29,7 +30,6 @@ namespace Hanabi {
             hand.RemoveAt(i);
             return brickToRemove;
         }
-
 
         public List<Brick>[] LookForPlayableBricks() {
             List<Brick>[] playableBricks = new List<Brick>[players.Count()];
@@ -173,11 +173,35 @@ namespace Hanabi {
                 possibleBricks = possibleBricks.Where(b => b.PeakNumber() == brick.PeakNumber()).ToList();
             }
 
-            float playAble = 0;
+            float playableBricks = 0;
             foreach (Brick possibleBrick in possibleBricks) {
-                if (possibleBrick.IsBrickPlayable()) playAble++;
+                if (possibleBrick.IsBrickPlayable()) playableBricks++;
             }
-            return playAble / possibleBricks.Count();
+
+            brick.brickPlayability = playableBricks / possibleBricks.Count();
+            return brick.brickPlayability;
+        }
+
+        public float CalculateTrashability(Brick brick) {
+            if (brick.brickLocation != (BrickLocation)this.playerIndex) {
+                throw new NotImplementedException("This is not implemented");
+            }
+
+            List<Brick> possibleBricks = this.GetUnvisibleBricks();
+            if (brick.gotColorClue) {
+                possibleBricks = possibleBricks.Where(b => b.PeakColor() == brick.PeakColor()).ToList();
+            }
+            if (brick.gotNumberClue) {
+                possibleBricks = possibleBricks.Where(b => b.PeakNumber() == brick.PeakNumber()).ToList();
+            }
+
+            float trashableBricks = 0;
+            foreach (Brick possibleBrick in possibleBricks) {
+                if (possibleBrick.IsBrickTrashAble()) trashableBricks++;
+            }
+
+            brick.brickTrashability = trashableBricks / possibleBricks.Count();
+            return brick.brickTrashability;
         }
     }
 }

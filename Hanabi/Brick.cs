@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using static Hanabi.GlobalVariables;
 
 namespace Hanabi {
@@ -24,6 +25,9 @@ namespace Hanabi {
 
         private readonly Color color;
         private readonly int number;
+
+        public float brickPlayability = 0;  // this value is calculated in the player class
+        public float brickTrashability = 0; // this value is calculated in the player class
 
         private void VerifyPlayer() {
             if ((int)brickLocation == currentPlayerIndex) {
@@ -80,7 +84,23 @@ namespace Hanabi {
         }
 
         public override string ToString() {
-            return $"|{color}{number}|";
+            return $"|{color.ToString()[0]}{number}|";
+        }
+
+        public string ToStringWithClues() {
+            /*    No clues
+             * () Color
+             * [] Number
+             * {} Both
+             */
+            string clueStartMark = GotEnoughClues() ? "{" :
+                                   gotColorClue ? "(" :
+                                   gotNumberClue ? "[" : "";
+            string clueEndMark = GotEnoughClues() ? "}" :
+                                 gotColorClue ? ")" :
+                                 gotNumberClue ? "]" : "";
+
+            return $"|{color.ToString()[0]}{clueStartMark}{number}{clueEndMark}|";
         }
 
         public override bool Equals(object obj) {
@@ -104,6 +124,28 @@ namespace Hanabi {
             if (table.Contains(this)) return false;
             if (number == 1) return true;
             return table.Contains(new Brick(color, number - 1));
+        }
+
+        public bool IsBrickTrashAble() {
+
+            if (!GotEnoughClues()) VerifyPlayer();
+                        
+            // Check if the identical brick is already played
+            if (table.Contains(this)) return true;
+
+            // Check if the brick can be played later or if all bricks of 
+            // a lower number has been trashed (for example 3 is trashable 
+            // if all 2s has been trashed.
+            for (int n = 1; n < number; n++) {
+                int count = trashPile.Where(b => b.color == color && 
+                                                 b.number == number - 1).Count();
+                if (n == 1) {
+                    if (count == 3) return true;
+                } else if (n == 2 || n == 3 || n == 4) {
+                    if (count == 2) return true;
+                } 
+            }
+            return false;
         }
 
         internal static List<Brick> GenerateCompleteSetOfBricks() {
