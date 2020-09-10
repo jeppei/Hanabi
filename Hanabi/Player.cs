@@ -11,6 +11,18 @@ namespace Hanabi {
         public List<Brick> hand = new List<Brick>();
 
         public int playerIndex;
+
+        public class MoveDetails {
+            public int turn;
+            public Move move;
+            public Brick brick; // if trash or play
+            public int clue;
+        }
+
+        public enum Move { TRASH, PLAY, CLUE }
+
+        public List<MoveDetails> History = new List<MoveDetails>();
+
         public override string ToString() => string.Join(", ", hand);
         public string ToStringWithClues() => string.Join(", ", hand.Select(b => b.ToStringWithClues()));
 
@@ -20,7 +32,7 @@ namespace Hanabi {
 
         public void ReceiveBrick(Brick receivedBrick, int brickIndex = -1) {
             receivedBrick.brickLocation = (BrickLocation)playerIndex;
-            receivedBrick.Age = 0;
+            receivedBrick.HandAge = 0;
             brickIndex = (brickIndex == -1) ? hand.Count : brickIndex;
             hand.Insert(brickIndex, receivedBrick);
         }
@@ -80,6 +92,7 @@ namespace Hanabi {
             DrawABrick();
             moves += 1;
             lastMoveDetails = $"Trashed {trashedBrick}";
+            History.Add(new MoveDetails() { brick = trashedBrick, clue = -1, move = Move.TRASH, turn = turn });
             return true;
         }
 
@@ -102,6 +115,7 @@ namespace Hanabi {
             DrawABrick();
             moves += 1;
             lastMoveDetails = $"Played {playedBrick}";
+            History.Add(new MoveDetails() { brick = playedBrick, clue = -1, move = Move.PLAY, turn = turn });
             return true;
         }
 
@@ -151,7 +165,7 @@ namespace Hanabi {
                         clueAsString = clue.ToString();
                         brickWhoGotTheLastClue = brick;
                     } else {
-                        // Give anti clue
+                        // Save anti clue
                         brick.antiNumberClues.Add(clue);
                     }
                 }
@@ -166,6 +180,7 @@ namespace Hanabi {
             clues -= 1;
             moves += 1;
             lastMoveDetails = $"Clue {clueAsString} to {player.playerIndex}";
+            History.Add(new MoveDetails() { brick = null, clue = clue, move = Move.CLUE, turn = turn });
             return true;
         }
 

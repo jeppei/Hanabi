@@ -40,9 +40,11 @@ namespace Hanabi {
                     foreach (Brick brick in currentPlayer.hand) {
                         currentPlayer.CalculateBrickPlayability(brick);
                         currentPlayer.CalculateBrickTrashability(brick);
-                        brick.Age++;
+                        brick.HandAge++;
                         if (brick.gotColorClue || brick.gotNumberClue) brick.ClueAge++;
                     }
+                    foreach (Brick brick in table) brick.TableAge++;
+
                     string playabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickPlayability.ToString().Replace(",", ".").WithMaxLenght(4)));
                     string trashabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickTrashability.ToString().Replace(",", ".").WithMaxLenght(4)));
 

@@ -39,8 +39,9 @@ namespace Hanabi {
 
         public int numberOfBricksWhoGotSameClue = 0;
 
-        public int Age = 0;
+        public int HandAge = 0; // How many (of your) turns have this brick been in your hand
         public int ClueAge = 0;
+        public int TableAge = 0; // How many turns have this brick been in on the table
 
         /* When giving a clue that two bricks are green, then you also know that the other bricks 
          * can't be green, which will be called an anticlue. Same thing goes for the number

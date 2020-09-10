@@ -38,12 +38,12 @@ namespace Hanabi {
         
         public static bool cheat = false;
         public static bool printInConsole = false;
-        public static int iterations = 500;
+        public static int iterations = 200;
+        public static int numberOfPlayers = 3;
 
         public static int score;
         public static int lifes;
         public static int clues;
-        public static int numberOfPlayers = 2;
 
         public static Player[] players;
 
