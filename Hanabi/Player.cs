@@ -20,6 +20,7 @@ namespace Hanabi {
 
         public void ReceiveBrick(Brick receivedBrick, int brickIndex = -1) {
             receivedBrick.brickLocation = (BrickLocation)playerIndex;
+            receivedBrick.Age = 0;
             brickIndex = (brickIndex == -1) ? hand.Count : brickIndex;
             hand.Insert(brickIndex, receivedBrick);
         }
@@ -104,19 +105,24 @@ namespace Hanabi {
             return true;
         }
 
+        public void PlayerCheck(Player player) {
+            if (currentPlayerIndex == player.playerIndex) {
+                throw new Exception("You are not allowed to give a clue to yourself!");
+            }
+        }
+
         public bool GiveAColorClueTo(Player player, Color color) {
+            if (color == Color.unknown) return false;
             return GiveAClueTo(player, (int)color);
         }
 
         public bool GiveANumberClueTo(Player player, int number) {
-            if (currentPlayerIndex == player.playerIndex) {
-                throw new Exception("You are not allowed to give a clue to yourself!");
-            }
             if (number < 1 || 5 < number) return false;
             return GiveAClueTo(player, number);
         }
 
-        private bool GiveAClueTo(Player player, int clue) {
+        public bool GiveAClueTo(Player player, int clue) {
+            PlayerCheck(player);
 
             if (moves == turn) return false;
             if (clues == 0) return false;
@@ -153,8 +159,8 @@ namespace Hanabi {
 
             if (cluedBricks == 0) {
                 throw new Exception($"The user gaved an invalid clue! Clue = {clue}");
-            } else if (cluedBricks == 1) {
-                brickWhoGotTheLastClue.onlyOneWithClue = true;
+            } else {
+                brickWhoGotTheLastClue.numberOfBricksWhoGotSameClue = cluedBricks;
             }
 
             clues -= 1;
@@ -231,6 +237,16 @@ namespace Hanabi {
             } else {
                 throw new Exception("Not implemented");
             }
+        }
+
+        public int NumberOfBricksWithThisClue(int clue) {
+            PlayerCheck(this);
+            int bricksMatchingClue = 0;
+            foreach (Brick brick in hand) {
+                if ((int)brick.PeakColor() == clue) bricksMatchingClue++;
+                if ((int)brick.PeakNumber() == clue) bricksMatchingClue++;
+            }
+            return bricksMatchingClue;
         }
     }
 }

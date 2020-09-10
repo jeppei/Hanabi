@@ -8,11 +8,7 @@ namespace Hanabi {
             score = 0;
             lifes = 3;
             clues = 8;
-            players = new Player[] {
-                new Player(0),
-                new Player(1),
-                new Player(2)
-            };
+            players = CreatePlayers();
 
             handSize = (players.Length == 2) ? 5 :
                        (players.Length == 3) ? 5 :
@@ -31,6 +27,14 @@ namespace Hanabi {
             trashPile = new List<Brick>();
             table = new List<Brick>();
         }
+
+        private static Player[] CreatePlayers() {
+            Player[] thePlayers = new Player[numberOfPlayers];
+            for (int p = 0; p < numberOfPlayers; p++) {
+                thePlayers[p] = new Player(p);
+            }
+            return thePlayers;
+        }
         
         public static bool cheat = false;
         public static bool printInConsole = false;
@@ -39,6 +43,7 @@ namespace Hanabi {
         public static int score;
         public static int lifes;
         public static int clues;
+        public static int numberOfPlayers = 2;
 
         public static Player[] players;
 

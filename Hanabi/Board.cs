@@ -40,11 +40,13 @@ namespace Hanabi {
                     foreach (Brick brick in currentPlayer.hand) {
                         currentPlayer.CalculateBrickPlayability(brick);
                         currentPlayer.CalculateBrickTrashability(brick);
+                        brick.Age++;
+                        if (brick.gotColorClue || brick.gotNumberClue) brick.ClueAge++;
                     }
                     string playabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickPlayability.ToString().Replace(",", ".").WithMaxLenght(4)));
                     string trashabilities = string.Join(", ", currentPlayer.hand.Select(b => b.brickTrashability.ToString().Replace(",", ".").WithMaxLenght(4)));
 
-                    Strategies.PlayIfTheOddsAreHigh2(currentPlayer);
+                    Strategies.PriotitiesSingleBrickClues(currentPlayer);
                     VerifyThatThePlayerMadeAMove();
 
                     Print($"Turn {turn}, " +
@@ -190,6 +192,7 @@ namespace Hanabi {
 
         static bool IsTheGameOver() {
             if (lastTurns == players.Count()) return true;
+            if (score == 25) return true;
             if (drawPile.Count == 0) lastTurns += 1;
             if (lifes == 0) {
                 /* This code can be used to examine why the number 

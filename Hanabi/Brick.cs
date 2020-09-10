@@ -35,7 +35,12 @@ namespace Hanabi {
         public bool gotColorClue = false;
 
         // I you get a clue and the player only points at this brick then this value becomes true
-        public bool onlyOneWithClue = false; 
+        public bool OnlyOneWithClue => numberOfBricksWhoGotSameClue == 1;
+
+        public int numberOfBricksWhoGotSameClue = 0;
+
+        public int Age = 0;
+        public int ClueAge = 0;
 
         /* When giving a clue that two bricks are green, then you also know that the other bricks 
          * can't be green, which will be called an anticlue. Same thing goes for the number
