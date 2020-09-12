@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using static Hanabi.Brick;
-using static Hanabi.GlobalVariables;
+using static Hanabi.Game;
+using static Hanabi.Player.MoveDetails.Move;
 
 namespace Hanabi {
 
@@ -13,18 +14,18 @@ namespace Hanabi {
         public int playerIndex;
 
         public class MoveDetails {
+            public enum Move { TRASH, PLAY, CLUE }
             public int turn;
             public Move move;
             public Brick brick; // if trash or play
             public int clue;
         }
 
-        public enum Move { TRASH, PLAY, CLUE }
-
         public List<MoveDetails> History = new List<MoveDetails>();
 
         public override string ToString() => string.Join(", ", hand);
         public string ToStringWithClues() => string.Join(", ", hand.Select(b => b.ToStringWithClues()));
+        public string ToStringWithCluesCompact() => string.Join(", ", hand.Select(b => b.ToStringWithCluesCompact()));
 
         public Player(int playerIndex) {
             this.playerIndex = playerIndex;
@@ -37,7 +38,7 @@ namespace Hanabi {
             hand.Insert(brickIndex, receivedBrick);
         }
 
-        private Brick RemoveBrick(int i, BrickLocation brickLocation) {
+        public Brick RemoveBrick(int i, BrickLocation brickLocation) {
             Brick brickToRemove = hand[i];
             brickToRemove.brickLocation = brickLocation;
             hand.RemoveAt(i);
@@ -86,13 +87,18 @@ namespace Hanabi {
             if (moves == turn) return false;
             
             Brick trashedBrick = RemoveBrick(brickIndex, BrickLocation.TrashPile);
-            trashPile.Add(trashedBrick);
+            trash.Add(trashedBrick);
             AddClue();
 
             DrawABrick();
             moves += 1;
             lastMoveDetails = $"Trashed {trashedBrick}";
-            History.Add(new MoveDetails() { brick = trashedBrick, clue = -1, move = Move.TRASH, turn = turn });
+            History.Add(new MoveDetails() { 
+                brick = trashedBrick, 
+                clue = -1, 
+                move = TRASH, 
+                turn = turn 
+            });
             return true;
         }
 
@@ -109,13 +115,18 @@ namespace Hanabi {
             } else {
                 lifes -= 1;
                 playedBrick.brickLocation = BrickLocation.TrashPile;
-                trashPile.Add(playedBrick);
+                trash.Add(playedBrick);
             }
 
             DrawABrick();
             moves += 1;
             lastMoveDetails = $"Played {playedBrick}";
-            History.Add(new MoveDetails() { brick = playedBrick, clue = -1, move = Move.PLAY, turn = turn });
+            History.Add(new MoveDetails() { 
+                brick = playedBrick, 
+                clue = -1, 
+                move = PLAY, 
+                turn = turn 
+            });
             return true;
         }
 
@@ -180,7 +191,12 @@ namespace Hanabi {
             clues -= 1;
             moves += 1;
             lastMoveDetails = $"Clue {clueAsString} to {player.playerIndex}";
-            History.Add(new MoveDetails() { brick = null, clue = clue, move = Move.CLUE, turn = turn });
+            History.Add(new MoveDetails() { 
+                brick = null, 
+                clue = clue, 
+                move = CLUE, 
+                turn = turn 
+            });
             return true;
         }
 
@@ -193,7 +209,7 @@ namespace Hanabi {
                 visibleBricks.AddRange(player.hand);
             }
 
-            visibleBricks.AddRange(trashPile);
+            visibleBricks.AddRange(trash);
             visibleBricks.AddRange(table);
 
             return visibleBricks;

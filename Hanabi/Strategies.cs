@@ -1,21 +1,20 @@
 using System.Collections.Generic;
 using System.Linq;
-using static Hanabi.GlobalVariables;
+using static Hanabi.Game;
 
 namespace Hanabi {
     public class Strategies {
 
-        public static void UseLifesButDontDie(Player currentPlayer) {
+        public static void UseLifesButDontDie() {
 
-            if (lifes > 1) {
-                currentPlayer.PlayABrick();
-            } else {
-                currentPlayer.TrashABrick();
-            }
+            Player currentPlayer = players[currentPlayerIndex];
+            if (lifes > 1) currentPlayer.PlayABrick();
+            else currentPlayer.TrashABrick();
         }
 
-        public static void PlayOnlyIf100Sure1(Player currentPlayer) {
+        public static void PlayOnlyIf100Sure1() {
 
+            Player currentPlayer = players[currentPlayerIndex];
             List<Brick>[] allPlayableBricks = currentPlayer.LookForPlayableBricks();
 
             // Check if I can play a brick, if so play it
@@ -48,8 +47,9 @@ namespace Hanabi {
             currentPlayer.TrashABrick();
         }
 
-        public static void PlayOnlyIf100Sure2(Player currentPlayer) {
+        public static void PlayOnlyIf100Sure2() {
 
+            Player currentPlayer = players[currentPlayerIndex];
             List<Brick>[] allPlayableBricks = currentPlayer.LookForPlayableBricks();
 
             // Check if I can play a brick, if so play it
@@ -82,8 +82,9 @@ namespace Hanabi {
             currentPlayer.TrashABrick();
         }
     
-        public static void PlayIfTheOddsAreHigh(Player currentPlayer) {
+        public static void PlayIfTheOddsAreHigh() {
 
+            Player currentPlayer = players[currentPlayerIndex];
             List<Brick>[] allPlayableBricks = currentPlayer.LookForPlayableBricks();
 
             // Check if I can play a brick, if so play it
@@ -122,10 +123,11 @@ namespace Hanabi {
             currentPlayer.TrashABrick();
         }
 
-        public static void PlayIfTheOddsAreHigh2(Player currentPlayer) {
+        public static void PlayIfTheOddsAreHigh2() {
             // This strategy is PlayIfTheOddsAreHigh and that if a player 
             // gives a clue about one brick then the player will play it
 
+            Player currentPlayer = players[currentPlayerIndex];
             for (int i = 0; i < currentPlayer.hand.Count; i++) {
                 Brick brick = currentPlayer.hand[i];
                 if (brick.OnlyOneWithClue && brick.brickPlayability != 0) {
@@ -173,12 +175,11 @@ namespace Hanabi {
             currentPlayer.TrashABrick();
         }
 
-
-
-        public static void PriotitiesSingleBrickClues(Player currentPlayer) {
+        public static void PriotitiesSingleBrickClues() {
             // This strategy is PlayIfTheOddsAreHigh2 and but with the 
             // addon that the players have a strategy for clues
 
+            Player currentPlayer = players[currentPlayerIndex];
             for (int i = 0; i < currentPlayer.hand.Count; i++) {
                 Brick brick = currentPlayer.hand[i];
                 if (brick.OnlyOneWithClue && brick.brickPlayability != 0) {
@@ -207,8 +208,8 @@ namespace Hanabi {
                 // Each playable brick can be given one of two clues (number or color). We want a dictionary where 
                 // The index is the number of bricks that matches a clue, and the value list of tuples. Item1 in the tupele is 
                 // the clue and item2 is which player the clue is for. In short Dict[BricksMatchingClue] = (Clue, Player)
-                Dictionary<int, List<(int, int)>> clues = new Dictionary<int, List<(int, int)>>();
-                for (int i = 1; i <= 5; i++) clues[i] = new List<(int, int)>();
+                Dictionary<int, List<(int, int)>> myClues = new Dictionary<int, List<(int, int)>>();
+                for (int i = 1; i <= 5; i++) myClues[i] = new List<(int, int)>();
 
                 for (int playerindex = 0; playerindex < players.Count(); playerindex++) {
                     int pIndex = (playerindex + currentPlayer.playerIndex) % players.Count();
@@ -222,19 +223,19 @@ namespace Hanabi {
                         int bricksMatchingColorClue = players[pIndex].NumberOfBricksWithThisClue(colorClue);
                         int bricksMatchingNumberClue = players[pIndex].NumberOfBricksWithThisClue(numberClue);
 
-                        if (!brick.gotColorClue) clues[bricksMatchingColorClue].Add((colorClue, pIndex));
-                        if (!brick.gotNumberClue) clues[bricksMatchingNumberClue].Add((numberClue, pIndex));
+                        if (!brick.gotColorClue) myClues[bricksMatchingColorClue].Add((colorClue, pIndex));
+                        if (!brick.gotNumberClue) myClues[bricksMatchingNumberClue].Add((numberClue, pIndex));
                     }
                 }
 
-                foreach ((int, int) clue in clues[1]) {
+                foreach ((int, int) clue in myClues[1]) {
                     // clue = (clue, player)
                     currentPlayer.GiveAClueTo(players[clue.Item2], clue.Item1);
                     return;
                 }
 
                 for (int i = 5; i > 1; i--) {
-                    foreach ((int, int) clue in clues[i]) {
+                    foreach ((int, int) clue in myClues[i]) {
                         // clue = (clue, player)
                         currentPlayer.GiveAClueTo(players[clue.Item2], clue.Item1);
                         return;
@@ -255,10 +256,11 @@ namespace Hanabi {
             currentPlayer.TrashABrick();
         }
 
-        public static void PlayIfTheOddsAreHigh3(Player currentPlayer) {
+        public static void PlayIfTheOddsAreHigh3() {
             // This strategy is PlayIfTheOddsAreHigh2 and that the player 
             // also gives clues about 5s
 
+            Player currentPlayer = players[currentPlayerIndex];
             for (int i = 0; i < currentPlayer.hand.Count; i++) {
                 Brick brick = currentPlayer.hand[i];
 

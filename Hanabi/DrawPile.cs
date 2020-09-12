@@ -23,7 +23,6 @@ namespace Hanabi {
             return theBrick;
         }
 
-
         public Brick CheatDrawBrick(Brick brick) {
             Bricks.Remove(brick);
             return brick;

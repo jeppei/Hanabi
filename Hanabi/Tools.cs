@@ -39,9 +39,9 @@ namespace Hanabi {
             }
         }
 
-        public static string WithMaxLenght(this string text, int maxLength) {
-            if (text == null) return text;
-            if (text.Length < maxLength) return text;
+        public static string WithLenght(this string text, int maxLength) {
+            if (text == null) return "    ";
+            if (text.Length < maxLength) return new string(' ', maxLength-text.Length) + text;
             return text.Substring(0, maxLength);
         }
     }

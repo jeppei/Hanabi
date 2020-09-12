@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Hanabi.GlobalVariables;
+using static Hanabi.Game;
 
 namespace Hanabi {
 
@@ -110,6 +110,22 @@ namespace Hanabi {
              * [] Number
              * {} Both
              */
+            string clueStartMark = GotEnoughClues() ? " {" :
+                                   gotColorClue ? " (" :
+                                   gotNumberClue ? " [" : "   ";
+            string clueEndMark = GotEnoughClues() ? "}" :
+                                 gotColorClue ? ")" :
+                                 gotNumberClue ? "]" : "";
+
+            return $"|{color.ToString()[0]}{clueStartMark}{number}{clueEndMark}|";
+        }
+
+        public string ToStringWithCluesCompact() {
+            /*    No clues
+             * () Color
+             * [] Number
+             * {} Both
+             */
             string clueStartMark = GotEnoughClues() ? "{" :
                                    gotColorClue ? "(" :
                                    gotNumberClue ? "[" : "";
@@ -154,8 +170,8 @@ namespace Hanabi {
             // a lower number has been trashed (for example 3 is trashable 
             // if all 2s has been trashed.
             for (int n = 1; n < number; n++) {
-                int count = trashPile.Where(b => b.color == color && 
-                                                 b.number == number - 1).Count();
+                int count = trash.Where(b => b.color == color && 
+                                        b.number == number - 1).Count();
                 if (n == 1) {
                     if (count == 3) return true;
                 } else if (n == 2 || n == 3 || n == 4) {
