@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Hanabi.PlayerClasses;
+using System;
 using System.Linq;
 
 namespace Hanabi {
@@ -12,11 +12,11 @@ namespace Hanabi {
         public static int score;
         public static int lifes;
         public static int clues;
-        public static Player[] players;
+        public static Players players;
 
         public delegate void Strategy();
 
-        readonly Strategy MakeAMove = Strategies.PriotitiesSingleBrickClues;
+        readonly Strategy MakeAMove = Strategies.PriotitiesSingleBrickCluesAndDenise;
 
         public int handSize = (numberOfPlayers == 2) ? 5 :
                               (numberOfPlayers == 3) ? 5 :
@@ -30,10 +30,11 @@ namespace Hanabi {
         public static int turn;
 
         public static string lastMoveDetails = "";
+        public static string lastMoveThinking = "";
         public static int currentPlayerIndex;
 
-        public static List<Brick> trash;
-        public static List<Brick> table;
+        public static Trash trash;
+        public static Table table;
         public static DrawPile drawPile;
 
         public Game() {
@@ -49,8 +50,8 @@ namespace Hanabi {
             lifes = 3;
             clues = 8;
 
-            trash = new List<Brick>();
-            table = new List<Brick>();
+            trash = new Trash();
+            table = new Table();
             drawPile = new DrawPile();
 
             players = CreatePlayers();
@@ -58,10 +59,10 @@ namespace Hanabi {
             history.AddGameStats();
         }
 
-        private static Player[] CreatePlayers() {
-            Player[] thePlayers = new Player[numberOfPlayers];
+        private static Players CreatePlayers() {
+            Players thePlayers = new Players();
             for (int p = 0; p < numberOfPlayers; p++) {
-                thePlayers[p] = new Player(p);
+                thePlayers.Add(new Player(p));
             }
             return thePlayers;
         }
@@ -115,6 +116,7 @@ namespace Hanabi {
                 if (brick.gotColorClue || brick.gotNumberClue) brick.ClueAge++;
             }
             foreach (Brick brick in table) brick.TableAge++;
+            lastMoveThinking = "";
         }
 
         private void VerifyThatThePlayerMadeAMove() {

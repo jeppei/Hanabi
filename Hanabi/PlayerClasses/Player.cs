@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using static Hanabi.Brick;
 using static Hanabi.Game;
-using static Hanabi.Player.MoveDetails.Move;
+using static Hanabi.PlayerClasses.Player.MoveDetails.Move;
 
-namespace Hanabi {
+namespace Hanabi.PlayerClasses {
 
     public class Player {
 
-        public List<Brick> hand = new List<Brick>();
+        public Hand hand = new Hand();
 
         public int playerIndex;
 
@@ -19,6 +19,8 @@ namespace Hanabi {
             public Move move;
             public Brick brick; // if trash or play
             public int clue;
+            public Hand handAfterMove;
+            public string handAfterMoveStr;
         }
 
         public List<MoveDetails> History = new List<MoveDetails>();
@@ -93,12 +95,14 @@ namespace Hanabi {
             DrawABrick();
             moves += 1;
             lastMoveDetails = $"Trashed {trashedBrick}";
-            History.Add(new MoveDetails() { 
-                brick = trashedBrick, 
-                clue = -1, 
-                move = TRASH, 
-                turn = turn 
-            });
+            History.Add(new MoveDetails() {
+                brick = trashedBrick,
+                clue = -1,
+                move = TRASH,
+                turn = turn,
+                handAfterMove = hand.Copy(),
+                handAfterMoveStr = hand.Copy().BricksToString()
+            }) ;
             return true;
         }
 
@@ -121,18 +125,20 @@ namespace Hanabi {
             DrawABrick();
             moves += 1;
             lastMoveDetails = $"Played {playedBrick}";
-            History.Add(new MoveDetails() { 
-                brick = playedBrick, 
-                clue = -1, 
-                move = PLAY, 
-                turn = turn 
+            History.Add(new MoveDetails() {
+                brick = playedBrick,
+                clue = -1,
+                move = PLAY,
+                turn = turn,
+                handAfterMove = hand.Copy(),
+                handAfterMoveStr = hand.Copy().BricksToString()
             });
             return true;
         }
 
         public void PlayerCheck(Player player) {
             if (currentPlayerIndex == player.playerIndex) {
-                throw new Exception("You are not allowed to give a clue to yourself!");
+                throw new Exception("You are not allowed to peak at your unknown bricks or give a clue to yourself!");
             }
         }
 
@@ -195,7 +201,9 @@ namespace Hanabi {
                 brick = null, 
                 clue = clue, 
                 move = CLUE, 
-                turn = turn 
+                turn = turn,
+                handAfterMove = hand.Copy(),
+                handAfterMoveStr = hand.Copy().BricksToString()
             });
             return true;
         }

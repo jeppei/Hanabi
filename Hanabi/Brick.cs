@@ -51,11 +51,11 @@ namespace Hanabi {
 
         private void VerifyPlayer() {
             if ((int)brickLocation == currentPlayerIndex) {
-                Console.WriteLine($"Player {currentPlayerIndex} peaked at her/his brick!");
-                throw new Exception($"Player {currentPlayerIndex} peaked at her/his brick!");
+                Console.WriteLine($"Player {currentPlayerIndex} peeked at her/his brick!");
+                throw new Exception($"Player {currentPlayerIndex} peeked at her/his brick!");
             } else if (brickLocation == BrickLocation.DrawPile) {
-                Console.WriteLine($"Player {currentPlayerIndex} peaked at a brick in the draw pile!");
-                throw new Exception($"Player {currentPlayerIndex} peaked at a brick in the draw pile!");
+                Console.WriteLine($"Player {currentPlayerIndex} peeked at a brick in the draw pile!");
+                throw new Exception($"Player {currentPlayerIndex} peeked at a brick in the draw pile!");
             }
         }
 
@@ -138,6 +138,8 @@ namespace Hanabi {
 
         public override bool Equals(object obj) {
 
+            VerifyPlayer();
+
             if (obj.GetType() != typeof(Brick)) return false;
 
             Brick brickObj = (Brick)obj;
@@ -189,6 +191,16 @@ namespace Hanabi {
                 }
             }
             return bricks;
+        }
+
+        public Brick Copy() {
+            Brick copy = new Brick(color, number) {
+                ClueAge = ClueAge,
+                gotColorClue = gotColorClue,
+                gotNumberClue = gotNumberClue,
+                numberOfBricksWhoGotSameClue = numberOfBricksWhoGotSameClue
+            };
+            return copy;
         }
     }
 }

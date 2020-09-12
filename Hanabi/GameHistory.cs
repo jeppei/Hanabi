@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Hanabi.PlayerClasses;
+using System;
 using System.Linq;
 using System.Text;
 using static Hanabi.Brick;
@@ -34,7 +35,7 @@ namespace Hanabi {
         }
 
         public void AddPlayersMove() {
-            AddLine($"Move: {lastMoveDetails}");
+            AddLine($"Move: {lastMoveDetails}. {lastMoveThinking}");
             AddSeparator();
         }
 
@@ -49,7 +50,7 @@ namespace Hanabi {
 
         private void AddPlayersHand() {
             history.Append($"Players ({players.Count()}):" + "\n");
-            for (int i = 0; i < players.Length; i++) {
+            for (int i = 0; i < players.Count; i++) {
                 history.Append($"  Player[{i}]: {players[i].ToStringWithCluesCompact()}" + "\n");
             }
         }
