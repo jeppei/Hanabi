@@ -30,12 +30,13 @@ namespace Hanabi {
 
         public float brickPlayability = 0;  // this value is calculated in the player class
         public float brickTrashability = 0; // this value is calculated in the player class
+        public float brickImportance = 0; // this value is calculated in the player class
 
         public bool gotNumberClue = false;
         public bool gotColorClue = false;
 
         // I you get a clue and the player only points at this brick then this value becomes true
-        public bool OnlyOneWithClue => numberOfBricksWhoGotSameClue == 1;
+        public bool SingleClued => numberOfBricksWhoGotSameClue == 1;
 
         public int numberOfBricksWhoGotSameClue = 0;
 
@@ -172,8 +173,12 @@ namespace Hanabi {
             // a lower number has been trashed (for example 3 is trashable 
             // if all 2s has been trashed.
             for (int n = 1; n < number; n++) {
-                int count = trash.Where(b => b.color == color && 
-                                        b.number == number - 1).Count();
+                
+                int count = trash.Where(b => 
+                    b.color == color && 
+                    b.number == number - 1
+                ).Count();
+                
                 if (n == 1) {
                     if (count == 3) return true;
                 } else if (n == 2 || n == 3 || n == 4) {
@@ -181,6 +186,37 @@ namespace Hanabi {
                 } 
             }
             return false;
+        }
+
+        public float CalculateImportance() {
+
+            if (!GotEnoughClues()) VerifyPlayer();
+            if (table.Contains(this)) return 0;
+            if (IsBrickTrashable()) return 0;
+
+            float count = trash.Where(b =>
+                b.color == color &&
+                b.number == number
+            ).Count();
+
+            if (number == 1) {
+                if (count == 0) return 0.33f;
+                if (count == 1) return 0.50f;
+                if (count == 2) return 1.00f;
+
+            } else if (number == 2 || number == 3 || number == 4) {
+                if (count == 0) return 0.5f;
+                if (count == 1) return 1f;
+
+            } else if (number == 5) {
+                return 1;
+
+            } else {
+                throw new Exception("Invalid number on brick");
+            }
+
+            throw new Exception("Unable to calculate the importance of this brick. " +
+                                "Please check that the number is valid.");
         }
 
         internal static List<Brick> GenerateCompleteSetOfBricks() {

@@ -15,9 +15,11 @@ namespace Hanabi {
             string oldHand = player.ToStringWithClues();
             string playAbilities = string.Join(", ", player.hand.Select(b => b.brickPlayability.ToString().Replace(",", ".").WithLenght(4)));
             string trashAbilities = string.Join(", ", player.hand.Select(b => b.brickTrashability.ToString().Replace(",", ".").WithLenght(4)));
+            string importances = string.Join(", ", player.hand.Select(b => b.brickImportance.ToString().Replace(",", ".").WithLenght(4)));
             AddLine($"Turn {turn}, ");
             AddLine($"Player {currentPlayerIndex}:     {oldHand}");
             AddLine($"Playability:  {playAbilities}");
+            AddLine($"Importance:   {importances}");
             AddLine($"Trashability: {trashAbilities}");
         }
 

@@ -1,12 +1,13 @@
 ﻿using Hanabi.PlayerClasses;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Hanabi {
     public class Game {
 
         public static int numberOfPlayers = 3;
-        public static int iterations = 50; // must be at least 50
+        public static int iterations = 200; // must be at least 50
         public static bool cheat = false;
 
         public static int score;
@@ -16,7 +17,7 @@ namespace Hanabi {
 
         public delegate void Strategy();
 
-        readonly Strategy MakeAMove = Strategies.PriotitiesSingleBrickCluesAndDenise;
+        readonly Strategy MakeAMove = Strategies.Strategy.PlayOldestBricksWIthClues;
 
         public int handSize = (numberOfPlayers == 2) ? 5 :
                               (numberOfPlayers == 3) ? 5 :
@@ -32,6 +33,7 @@ namespace Hanabi {
         public static string lastMoveDetails = "";
         public static string lastMoveThinking = "";
         public static int currentPlayerIndex;
+        public static Player currentPlayer => players[currentPlayerIndex];
 
         public static Trash trash;
         public static Table table;
@@ -112,11 +114,18 @@ namespace Hanabi {
             foreach (Brick brick in currentPlayer.hand) {
                 currentPlayer.CalculateBrickPlayability(brick);
                 currentPlayer.CalculateBrickTrashability(brick);
+                currentPlayer.CalculateBrickImportance(brick);
                 brick.HandAge++;
                 if (brick.gotColorClue || brick.gotNumberClue) brick.ClueAge++;
             }
             foreach (Brick brick in table) brick.TableAge++;
             lastMoveThinking = "";
+
+            List<Brick>[] allPlayableBricks = currentPlayer.LookForPlayableBricks();
+            // Each playable brick can be given one of two clues (number or color). We want a dictionary where 
+            // The index is the number of bricks that matches a clue, and the value list of tuples. Item1 in the tupele is 
+            // the clue and item2 is which player the clue is for. In short Dict[BricksMatchingClue] = (Clue, Player)
+            currentPlayer.CalculatePossibleCluesToGive();
         }
 
         private void VerifyThatThePlayerMadeAMove() {

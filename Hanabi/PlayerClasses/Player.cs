@@ -24,6 +24,7 @@ namespace Hanabi.PlayerClasses {
         }
 
         public List<MoveDetails> History = new List<MoveDetails>();
+        public Dictionary<int, List<Clue>> PossibleCluesToGive;
 
         public override string ToString() => string.Join(", ", hand);
         public string ToStringWithClues() => string.Join(", ", hand.Select(b => b.ToStringWithClues()));
@@ -102,7 +103,7 @@ namespace Hanabi.PlayerClasses {
                 turn = turn,
                 handAfterMove = hand.Copy(),
                 handAfterMoveStr = hand.Copy().BricksToString()
-            }) ;
+            });
             return true;
         }
 
@@ -231,8 +232,9 @@ namespace Hanabi.PlayerClasses {
 
         public float CalculateBrickPlayability(Brick brick) => CalculateAbility(brick, Ability.play);
         public float CalculateBrickTrashability(Brick brick) => CalculateAbility(brick, Ability.trash);
+        public float CalculateBrickImportance(Brick brick) => CalculateAbility(brick, Ability.importance);
 
-        private enum Ability { trash, play }
+        private enum Ability { trash, play, importance }
         private float CalculateAbility(Brick brick, Ability ability) {
             if (brick.brickLocation != (BrickLocation)this.playerIndex) {
                 throw new NotImplementedException("This is not implemented");
@@ -260,6 +262,8 @@ namespace Hanabi.PlayerClasses {
                     if (possibleBrick.IsBrickTrashable()) bricksWithAbility++;
                 } else if (ability == Ability.play) {
                     if (possibleBrick.IsBrickPlayable()) bricksWithAbility++;
+                } else if (ability == Ability.importance) {
+                    bricksWithAbility += possibleBrick.CalculateImportance();
                 } else {
                     throw new Exception("Not implemented");
                 }
@@ -273,19 +277,73 @@ namespace Hanabi.PlayerClasses {
                 brick.brickPlayability = bricksWithAbility / possibleBricks.Count();
                 return brick.brickPlayability;
 
+            } else if (ability == Ability.importance) {
+                brick.brickImportance = bricksWithAbility / possibleBricks.Count();
+                return brick.brickImportance;
+
             } else {
                 throw new Exception("Not implemented");
             }
         }
 
-        public int NumberOfBricksWithThisClue(int clue) {
+        public List<Brick> BricksWithThisClue(int clue) {
             PlayerCheck(this);
-            int bricksMatchingClue = 0;
+            List<Brick> bricksMatchingClue = new List<Brick>();
             foreach (Brick brick in hand) {
-                if ((int)brick.PeakColor() == clue) bricksMatchingClue++;
-                if ((int)brick.PeakNumber() == clue) bricksMatchingClue++;
+                if ((int)brick.PeakColor() == clue) bricksMatchingClue.Add(brick);
+                if ((int)brick.PeakNumber() == clue) bricksMatchingClue.Add(brick);
             }
             return bricksMatchingClue;
+        }
+
+        public void CalculatePossibleCluesToGive() {
+            List<Brick>[] allPlayableBricks = LookForPlayableBricks();
+
+            // Each playable brick can be given one of two clues (number or color). We want a dictionary where 
+            // The index is the number of bricks that matches a clue, and the value list of tuples. Item1 in the tupele is 
+            // the clue and item2 is which player the clue is for. In short Dict[BricksMatchingClue] = (Clue, Player)
+            PossibleCluesToGive = new Dictionary<int, List<Clue>>();
+            for (int i = 1; i <= 5; i++) PossibleCluesToGive[i] = new List<Clue>();
+
+            for (int playerindex = 0; playerindex < players.Count(); playerindex++) {
+                int pIndex = (playerindex + playerIndex) % players.Count();
+
+                if (pIndex == currentPlayerIndex) continue;
+
+                foreach (Brick brick in allPlayableBricks[pIndex]) {
+
+                    if (brick.SingleClued) continue; // Dont want to give more clues to this one
+
+                    int colorClue = (int)brick.PeakColor();
+                    int numberClue = brick.PeakNumber();
+
+                    List<Brick> bricksMatchingColorClue = players[pIndex].BricksWithThisClue(colorClue);
+                    List<Brick> bricksMatchingNumberClue = players[pIndex].BricksWithThisClue(numberClue);
+
+                    if (!brick.gotColorClue) {
+                        Clue clue = new Clue(colorClue, pIndex, brick.brickImportance, bricksMatchingColorClue);
+                        PossibleCluesToGive[bricksMatchingColorClue.Count].Add(clue);
+                    }
+                    if (!brick.gotNumberClue) {
+                        Clue clue = new Clue(numberClue, pIndex, brick.brickImportance, bricksMatchingNumberClue);
+                        PossibleCluesToGive[bricksMatchingNumberClue.Count].Add(clue);
+                    }
+                }
+            }
+        }
+
+        public class Clue {
+            public int clue;
+            public int playerIndex;
+            public float importance;
+            public List<Brick> cluedBricks;
+
+            public Clue(int clue, int playerIndex, float importance, List<Brick> cluedBricks) {
+                this.clue = clue;
+                this.playerIndex = playerIndex;
+                this.importance = importance;
+                this.cluedBricks = cluedBricks;
+            }
         }
     }
 }
