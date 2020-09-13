@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static Hanabi.Brick;
 using static Hanabi.Game;
-using static Hanabi.PlayerClasses.Player.MoveDetails.Move;
+using static Hanabi.PlayerClasses.MoveDetails.Move;
 
 namespace Hanabi.PlayerClasses {
 
@@ -13,18 +13,9 @@ namespace Hanabi.PlayerClasses {
 
         public int playerIndex;
 
-        public class MoveDetails {
-            public enum Move { TRASH, PLAY, CLUE }
-            public int turn;
-            public Move move;
-            public Brick brick; // if trash or play
-            public int clue;
-            public Hand handAfterMove;
-            public string handAfterMoveStr;
-        }
-
         public List<MoveDetails> History = new List<MoveDetails>();
         public Dictionary<int, List<Clue>> PossibleCluesToGive;
+        public List<Brick> OtherPlayersSingleBrickClues = new List<Brick>();
 
         public override string ToString() => string.Join(", ", hand);
         public string ToStringWithClues() => string.Join(", ", hand.Select(b => b.ToStringWithClues()));
@@ -88,7 +79,7 @@ namespace Hanabi.PlayerClasses {
          */
         public bool TrashABrick(int brickIndex = 0) {
             if (moves == turn) return false;
-            
+
             Brick trashedBrick = RemoveBrick(brickIndex, BrickLocation.TrashPile);
             trash.Add(trashedBrick);
             AddClue();
@@ -206,6 +197,14 @@ namespace Hanabi.PlayerClasses {
                 handAfterMove = hand.Copy(),
                 handAfterMoveStr = hand.Copy().BricksToString()
             });
+
+            foreach (Player p in players) {
+                if (p.playerIndex == player.playerIndex) continue;
+                if (cluedBricks == 1) {
+                    p.OtherPlayersSingleBrickClues.Add(brickWhoGotTheLastClue);
+                }
+            }
+
             return true;
         }
 
@@ -321,11 +320,11 @@ namespace Hanabi.PlayerClasses {
                     List<Brick> bricksMatchingNumberClue = players[pIndex].BricksWithThisClue(numberClue);
 
                     if (!brick.gotColorClue) {
-                        Clue clue = new Clue(colorClue, pIndex, brick.brickImportance, bricksMatchingColorClue);
+                        Clue clue = new Clue(colorClue, pIndex, brick.brickImportance, bricksMatchingColorClue, brick);
                         PossibleCluesToGive[bricksMatchingColorClue.Count].Add(clue);
                     }
                     if (!brick.gotNumberClue) {
-                        Clue clue = new Clue(numberClue, pIndex, brick.brickImportance, bricksMatchingNumberClue);
+                        Clue clue = new Clue(numberClue, pIndex, brick.brickImportance, bricksMatchingNumberClue, brick);
                         PossibleCluesToGive[bricksMatchingNumberClue.Count].Add(clue);
                     }
                 }
@@ -337,12 +336,14 @@ namespace Hanabi.PlayerClasses {
             public int playerIndex;
             public float importance;
             public List<Brick> cluedBricks;
+            public Brick importantBrick;
 
-            public Clue(int clue, int playerIndex, float importance, List<Brick> cluedBricks) {
+            public Clue(int clue, int playerIndex, float importance, List<Brick> cluedBricks, Brick importantBrick) {
                 this.clue = clue;
                 this.playerIndex = playerIndex;
                 this.importance = importance;
                 this.cluedBricks = cluedBricks;
+                this.importantBrick = importantBrick;
             }
         }
     }

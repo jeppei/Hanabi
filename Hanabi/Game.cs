@@ -7,7 +7,7 @@ namespace Hanabi {
     public class Game {
 
         public static int numberOfPlayers = 3;
-        public static int iterations = 200; // must be at least 50
+        public static int iterations = 10000; // must be at least 50
         public static bool cheat = false;
 
         public static int score;
@@ -17,14 +17,14 @@ namespace Hanabi {
 
         public delegate void Strategy();
 
-        readonly Strategy MakeAMove = Strategies.Strategy.PlayOldestBricksWIthClues;
+        readonly Strategy MakeAMove = Strategies.Strategy.PriotitiesSingleBrickAndImportantClues;
 
         public int handSize = (numberOfPlayers == 2) ? 5 :
                               (numberOfPlayers == 3) ? 5 :
                               (numberOfPlayers == 4) ? 4 :
                               (numberOfPlayers == 5) ? 4 : -1;
 
-        public int lastTurns = 0;
+        public static int lastTurns;
         public GameHistory history = new GameHistory();
 
         public static int moves;
@@ -33,7 +33,7 @@ namespace Hanabi {
         public static string lastMoveDetails = "";
         public static string lastMoveThinking = "";
         public static int currentPlayerIndex;
-        public static Player currentPlayer => players[currentPlayerIndex];
+        public static Player CurrentPlayer => players[currentPlayerIndex];
 
         public static Trash trash;
         public static Table table;
@@ -47,6 +47,7 @@ namespace Hanabi {
             currentPlayerIndex = 0;
             turn = 1;
             moves = 0;
+            lastTurns = 0;
 
             score = 0;
             lifes = 3;
