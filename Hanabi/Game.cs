@@ -2,13 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Hanabi.Program;
 
 namespace Hanabi {
     public class Game {
-
-        public static int numberOfPlayers = 3;
-        public static int iterations = 10000; // must be at least 50
-        public static bool cheat = false;
 
         public static int score;
         public static int lifes;

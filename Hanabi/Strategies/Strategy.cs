@@ -39,9 +39,8 @@ namespace Hanabi.Strategies {
             if (Trash.ByTrashability()) return;
         }
 
-
         public static void PriotitiesSingleBrickAndImportantClues() {
-            // Best strategy so far, average score is 20.3-20.4
+            // Best strategy so far, average score is 20.6
             if (turn == 1) {
                 if (Clue.HintAboutManyOfSameNumber(1)) return;
             }

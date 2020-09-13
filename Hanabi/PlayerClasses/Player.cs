@@ -15,7 +15,7 @@ namespace Hanabi.PlayerClasses {
 
         public List<MoveDetails> History = new List<MoveDetails>();
         public Dictionary<int, List<Clue>> PossibleCluesToGive;
-        public List<Brick> OtherPlayersSingleBrickClues = new List<Brick>();
+        public List<Brick> CluedBricksThatIKnowOf = new List<Brick>();
 
         public override string ToString() => string.Join(", ", hand);
         public string ToStringWithClues() => string.Join(", ", hand.Select(b => b.ToStringWithClues()));
@@ -47,7 +47,7 @@ namespace Hanabi.PlayerClasses {
 
             for (int i = 0; i < players.Count(); i++) {
                 if (i == playerIndex) continue;
-                
+
                 foreach (Brick brick in players[i].hand) {
                     if (brick.IsBrickPlayable()) {
                         playableBricks[i].Add(brick);
@@ -155,7 +155,7 @@ namespace Hanabi.PlayerClasses {
 
             Brick brickWhoGotTheLastClue = null;
             foreach (Brick brick in player.hand) {
-                if (IsColorClue(clue)) { 
+                if (IsColorClue(clue)) {
 
                     if ((int)brick.PeakColor() == clue) {
                         brick.gotColorClue = true;
@@ -166,7 +166,7 @@ namespace Hanabi.PlayerClasses {
                         // Give anti clue
                         brick.antiColorClues.Add((Color)clue);
                     }
-                
+
                 } else if (IsNumberClue(clue)) {
                     if (brick.PeakNumber() == clue) {
                         brick.gotNumberClue = true;
@@ -189,10 +189,10 @@ namespace Hanabi.PlayerClasses {
             clues -= 1;
             moves += 1;
             lastMoveDetails = $"Clue {clueAsString} to {player.playerIndex}";
-            History.Add(new MoveDetails() { 
-                brick = null, 
-                clue = clue, 
-                move = CLUE, 
+            History.Add(new MoveDetails() {
+                brick = null,
+                clue = clue,
+                move = CLUE,
                 turn = turn,
                 handAfterMove = hand.Copy(),
                 handAfterMoveStr = hand.Copy().BricksToString()
@@ -200,9 +200,7 @@ namespace Hanabi.PlayerClasses {
 
             foreach (Player p in players) {
                 if (p.playerIndex == player.playerIndex) continue;
-                if (cluedBricks == 1) {
-                    p.OtherPlayersSingleBrickClues.Add(brickWhoGotTheLastClue);
-                }
+                p.CluedBricksThatIKnowOf.Add(brickWhoGotTheLastClue);
             }
 
             return true;
@@ -224,7 +222,7 @@ namespace Hanabi.PlayerClasses {
         }
 
         public List<Brick> GetUnvisibleBricks() {
-            List<Brick> unvisible = Brick.GenerateCompleteSetOfBricks();
+            List<Brick> unvisible = GenerateCompleteSetOfBricks();
             foreach (Brick brick in GetVisibleBricks()) unvisible.Remove(brick);
             return unvisible;
         }
@@ -235,11 +233,11 @@ namespace Hanabi.PlayerClasses {
 
         private enum Ability { trash, play, importance }
         private float CalculateAbility(Brick brick, Ability ability) {
-            if (brick.brickLocation != (BrickLocation)this.playerIndex) {
+            if ((int)brick.brickLocation != playerIndex) {
                 throw new NotImplementedException("This is not implemented");
             }
 
-            List<Brick> possibleBricks = this.GetUnvisibleBricks();
+            List<Brick> possibleBricks = GetUnvisibleBricks();
             if (brick.gotColorClue) {
                 possibleBricks = possibleBricks.Where(b => b.PeakColor() == brick.PeakColor()).ToList();
             }

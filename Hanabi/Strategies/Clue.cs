@@ -60,9 +60,9 @@ namespace Hanabi.Strategies {
             if (clues == 0) return false;
 
             // Add all clues to a list to sort them
-            List<PlayerClasses.Player.Clue> allClues = new List<PlayerClasses.Player.Clue>();
+            List<Player.Clue> allClues = new List<PlayerClasses.Player.Clue>();
             for (int i = 5; i > 1; i--) {
-                foreach (PlayerClasses.Player.Clue clue in CurrentPlayer.PossibleCluesToGive[i]) {
+                foreach (Player.Clue clue in CurrentPlayer.PossibleCluesToGive[i]) {
                     allClues.Add(clue);
                 }
             }
@@ -71,13 +71,14 @@ namespace Hanabi.Strategies {
             var orderedClues = allClues.OrderByDescending(c => c.importance);
 
             // Use the most important one, skip singleCluedBricks
-            foreach (PlayerClasses.Player.Clue clue in orderedClues) {
+            foreach (Player.Clue clue in orderedClues) {
 
                 // Dont give clues to bricks who already got a singleBrickCLue
                 if (avoidAlreadySingleClues && clue.importantBrick.SingleClued == true) continue;
                 // Dont give clues to bricks who already got a clue already
-                if (CurrentPlayer.OtherPlayersSingleBrickClues.Contains(clue.importantBrick)) continue;
-                
+                var alreadyClued = CurrentPlayer.CluedBricksThatIKnowOf.Where(b => b.SingleClued);
+                if (alreadyClued.Contains(clue.importantBrick)) continue;
+
                 CurrentPlayer.GiveAClueTo(players[clue.playerIndex], clue.clue);
                 lastMoveThinking += "Will give the most important clue";
                 return true;

@@ -5,26 +5,36 @@ using static Hanabi.Game;
 namespace Hanabi {
 
     class Program {
-        
-        static readonly int[] results = new int[26];
+
+        public static int numberOfPlayers;
+        public static int iterations = 2000; // must be at least 50
+        public static int[] playerCounts = new int[] { 3 };
+        //public static int[] playerCounts = new int[] { 2, 3, 4, 5 };
+        public static bool cheat = false;
+        static int[] results = new int[26];
         public static Game game;
         
         static void Main() {
  
-            Console.Write("[1                      50                      100]\n ");
+            foreach (int playerCount in playerCounts) {
 
-            for (int i = 0; i < iterations; i++) {
+                Console.WriteLine($" ################### {playerCount} players #################### ");
+                Console.Write("[0%                     50%                    100%]\n ");
+                results = new int[26];
+                numberOfPlayers = playerCount;
+                for (int i = 0; i < iterations; i++) {
 
-                PrintProgress(i);
+                    PrintProgress(i);
 
-                game = new Game();
-                game.Play();
+                    game = new Game();
+                    game.Play();
 
-                results[score]++;
+                    results[score]++;
+                }
+
+                game.history.PrintToConsole(); // Print the last game
+                PrintStatistics();
             }
-
-            game.history.PrintToConsole(); // Print the last game
-            PrintStatistics();
         }
 
         private static void PrintStatistics() {

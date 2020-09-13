@@ -176,7 +176,7 @@ namespace Hanabi {
                 
                 int count = trash.Where(b => 
                     b.color == color && 
-                    b.number == number - 1
+                    b.number == number
                 ).Count();
                 
                 if (n == 1) {
@@ -205,11 +205,11 @@ namespace Hanabi {
                 if (count == 2) return 1.00f;
 
             } else if (number == 2 || number == 3 || number == 4) {
-                if (count == 0) return 0.5f;
-                if (count == 1) return 1f;
+                if (count == 0) return 0.50f;
+                if (count == 1) return 1.00f;
 
             } else if (number == 5) {
-                return 1;
+                return 1.00f;
 
             } else {
                 throw new Exception("Invalid number on brick");
